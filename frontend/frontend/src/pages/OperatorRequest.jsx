@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
 import client from '../api/client'
 import { LOCATION_TYPES, SURFACE_AREA_BUCKETS, WARDS } from '../utils/constants'
@@ -6,10 +6,50 @@ import { LOCATION_TYPES, SURFACE_AREA_BUCKETS, WARDS } from '../utils/constants'
 export default function OperatorRequest() {
   const emptyItem = { ward_id: '', location_type: '', surface_area_bucket: '', gps_lat: '', gps_long: '' }
   const [operatorId, setOperatorId] = useState('')
+  const [councilId, setCouncilId] = useState('')
+  const [councils, setCouncils] = useState([])
   const [items, setItems] = useState([ { ...emptyItem } ])
   const [msg, setMsg] = useState('')
   const [msgType, setMsgType] = useState('')
   const [loading, setLoading] = useState(false)
+  const [operatorStatus, setOperatorStatus] = useState(null)
+  const [checkingOperator, setCheckingOperator] = useState(false)
+
+  useEffect(() => {
+    // Fetch councils from REV-MIS
+    const loadCouncils = async () => {
+      try {
+        const res = await client.get('/councils')
+        setCouncils(res.data || [])
+      } catch (err) {
+        console.error('Failed to load councils:', err)
+      }
+    }
+    loadCouncils()
+  }, [])
+
+  // Check operator status when operator ID changes
+  useEffect(() => {
+    const checkOperator = async () => {
+      if (!operatorId || operatorId.length === 0) {
+        setOperatorStatus(null)
+        return
+      }
+      
+      setCheckingOperator(true)
+      try {
+        const res = await client.get(`/operators/${operatorId}`)
+        setOperatorStatus(res.data)
+      } catch (err) {
+        setOperatorStatus({ notFound: true })
+      } finally {
+        setCheckingOperator(false)
+      }
+    }
+    
+    const timer = setTimeout(checkOperator, 500) // Debounce
+    return () => clearTimeout(timer)
+  }, [operatorId])
 
   const setItem = (idx, field, value) => {
     const copy = items.slice()
@@ -26,6 +66,7 @@ export default function OperatorRequest() {
     try {
       const payload = {
         operator_id: Number(operatorId),
+        council_id: Number(councilId),
         items: items.map(it => ({
           ward_id: Number(it.ward_id),
           location_type: it.location_type,
@@ -39,6 +80,7 @@ export default function OperatorRequest() {
       setMsgType('success')
       setItems([ { ...emptyItem } ])
       setOperatorId('')
+      setCouncilId('')
     } catch (err) {
       setMsg(err.response?.data?.message || 'Failed to submit request. Please check your input.')
       setMsgType('error')
@@ -80,6 +122,57 @@ export default function OperatorRequest() {
                 type="number"
               />
               <p className="text-xs text-gray-500 mt-1">Your registered operator ID</p>
+              
+              {/* Operator Status Feedback */}
+              {checkingOperator && (
+                <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-700">
+                  🔍 Checking operator status...
+                </div>
+              )}
+              
+              {operatorStatus && operatorStatus.notFound && (
+                <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+                  ❌ Operator ID {operatorId} not found. Please register as an operator first.
+                </div>
+              )}
+              
+              {operatorStatus && operatorStatus.status === 'PENDING' && (
+                <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-700">
+                  ⏳ Your operator application is <strong>PENDING</strong> review. You cannot submit license requests until your application is approved.
+                </div>
+              )}
+              
+              {operatorStatus && operatorStatus.status === 'REJECTED' && (
+                <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+                  ❌ Your operator application has been <strong>REJECTED</strong>. You cannot submit license requests. Please contact the administrator.
+                </div>
+              )}
+              
+              {operatorStatus && operatorStatus.status === 'APPROVED' && (
+                <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded text-sm text-green-700">
+                  ✅ Operator <strong>{operatorStatus.business_name}</strong> is APPROVED. You may proceed.
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Council <span className="text-red-500">*</span>
+              </label>
+              <select
+                className="border border-gray-300 p-3 w-full rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={councilId}
+                onChange={e=>setCouncilId(e.target.value)}
+                required
+              >
+                <option value="">-- Select Council --</option>
+                {councils.map(council => (
+                  <option key={council.id} value={council.id}>
+                    {council.name}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">Select the local council where your billboards are located</p>
             </div>
             
             <div className="space-y-4">
@@ -187,9 +280,12 @@ export default function OperatorRequest() {
             <button 
               className="w-full px-4 py-3 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 disabled:bg-gray-400 transition" 
               type="submit"
-              disabled={loading}
+              disabled={loading || !operatorStatus || operatorStatus.status !== 'APPROVED'}
             >
-              {loading ? 'Submitting...' : 'Submit License Request'}
+              {loading ? 'Submitting...' : 
+               !operatorStatus || operatorStatus.status !== 'APPROVED' 
+                 ? 'Operator Must Be Approved First' 
+                 : 'Submit License Request'}
             </button>
           </form>
         </div>

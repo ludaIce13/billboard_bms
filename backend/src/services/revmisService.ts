@@ -1,6 +1,22 @@
 import axios from 'axios';
+import dotenv from 'dotenv';
+import path from 'path';
+
+// Ensure we always load the backend .env file, even if machine env vars exist
+dotenv.config({
+  path: path.resolve(__dirname, '../../.env'),
+  override: true,
+});
 
 const BASE_URL = process.env.REVMIS_API_URL || 'https://rev-mis-server.onrender.com/api/v1/bms';
+
+// Debug: Log what we're actually reading
+console.log('[REVMIS] Environment check:', {
+  API_KEY_length: process.env.REVMIS_API_KEY?.length,
+  API_KEY_prefix: process.env.REVMIS_API_KEY?.substring(0, 20),
+  API_URL: process.env.REVMIS_API_URL,
+  COUNCIL_ID: process.env.REVMIS_COUNCIL_ID,
+});
 
 function getHeaders() {
   const apiKey = process.env.REVMIS_API_KEY;

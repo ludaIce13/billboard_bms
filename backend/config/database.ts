@@ -1,7 +1,7 @@
 import { Sequelize } from 'sequelize';
 import dotenv from 'dotenv';
 
-dotenv.config();
+dotenv.config({ override: true });
 
 let sequelize: Sequelize;
 if (process.env.USE_SQLITE === '1') {

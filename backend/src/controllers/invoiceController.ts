@@ -139,7 +139,10 @@ export async function sendInvoiceToRevmis(req: Request, res: Response) {
       ? new Date(anyInvoice.createdAt).toISOString().slice(0, 10)
       : new Date().toISOString().slice(0, 10);
 
-    const councilId = Number(process.env.REVMIS_COUNCIL_ID || 0);
+    // Use the council_id from the license request, fallback to env if not set
+    const councilId = licenseRequest?.council_id 
+      ? Number(licenseRequest.council_id) 
+      : Number(process.env.REVMIS_COUNCIL_ID || 0);
 
     const payload = {
       councilId,

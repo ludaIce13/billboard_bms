@@ -4,8 +4,21 @@ import { generatePlusCode } from '../utils/plusCode';
 
 export async function createLicenseRequest(req: Request, res: Response) {
   try {
-    const { operator_id, items } = req.body; // items: array of request items
-    const lr = await LicenseRequest.create({ operator_id });
+    const { operator_id, council_id, items } = req.body; // items: array of request items
+    
+    // Validate that operator exists and is approved
+    const operator = await Operator.findByPk(operator_id);
+    if (!operator) {
+      return res.status(404).json({ message: 'Operator not found. Please register as an operator first.' });
+    }
+    
+    if (operator.status !== 'APPROVED') {
+      return res.status(403).json({ 
+        message: `Cannot submit license request. Your operator application is currently ${operator.status}. Only APPROVED operators can submit license requests.` 
+      });
+    }
+    
+    const lr = await LicenseRequest.create({ operator_id, council_id });
     if (Array.isArray(items)) {
       for (const it of items) {
         // Auto-generate Plus Code from GPS coordinates
@@ -20,6 +33,7 @@ export async function createLicenseRequest(req: Request, res: Response) {
     const full = await LicenseRequest.findByPk(lr.id, { include: [LicenseRequestItem, Operator] });
     res.json(full);
   } catch (e) {
+    console.error('Error creating license request:', e);
     res.status(500).json({ message: 'Failed to create license request' });
   }
 }

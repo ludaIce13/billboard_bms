@@ -100,6 +100,7 @@ Tariff.init(
 export interface LicenseRequestAttributes {
   id: number;
   operator_id: number;
+  council_id: number;
   request_date: Date;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
 }
@@ -107,6 +108,7 @@ export interface LicenseRequestCreationAttributes extends Optional<LicenseReques
 export class LicenseRequest extends Model<LicenseRequestAttributes, LicenseRequestCreationAttributes> implements LicenseRequestAttributes {
   public id!: number;
   public operator_id!: number;
+  public council_id!: number;
   public request_date!: Date;
   public status!: 'PENDING' | 'APPROVED' | 'REJECTED';
 }
@@ -114,6 +116,7 @@ LicenseRequest.init(
   {
     id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     operator_id: { type: DataTypes.INTEGER, allowNull: false },
+    council_id: { type: DataTypes.INTEGER, allowNull: true, defaultValue: 1 },
     request_date: { type: DataTypes.DATEONLY, allowNull: false, defaultValue: DataTypes.NOW },
     status: { type: DataTypes.ENUM('PENDING', 'APPROVED', 'REJECTED'), allowNull: false, defaultValue: 'PENDING' },
   },

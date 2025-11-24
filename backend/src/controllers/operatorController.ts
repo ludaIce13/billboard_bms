@@ -57,6 +57,19 @@ export async function listOperators(req: Request, res: Response) {
   }
 }
 
+export async function getOperator(req: Request, res: Response) {
+  try {
+    const id = Number(req.params.id);
+    const op = await Operator.findByPk(id);
+    if (!op) {
+      return res.status(404).json({ message: 'Operator not found' });
+    }
+    res.json(op);
+  } catch (e) {
+    res.status(500).json({ message: 'Failed to get operator' });
+  }
+}
+
 export async function approveOperator(req: Request, res: Response) {
   try {
     const id = Number(req.params.id);
