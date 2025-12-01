@@ -72,7 +72,7 @@ Operator.init(
 // Tariff
 export interface TariffAttributes {
   id: number;
-  ward_id: number;
+  council_id: number;
   location_type: string;
   surface_area_bucket: string;
   tariff_amount: number;
@@ -80,7 +80,7 @@ export interface TariffAttributes {
 export interface TariffCreationAttributes extends Optional<TariffAttributes, 'id'> {}
 export class Tariff extends Model<TariffAttributes, TariffCreationAttributes> implements TariffAttributes {
   public id!: number;
-  public ward_id!: number;
+  public council_id!: number;
   public location_type!: string;
   public surface_area_bucket!: string;
   public tariff_amount!: number;
@@ -88,7 +88,7 @@ export class Tariff extends Model<TariffAttributes, TariffCreationAttributes> im
 Tariff.init(
   {
     id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-    ward_id: { type: DataTypes.INTEGER, allowNull: false },
+    council_id: { type: DataTypes.INTEGER, allowNull: false },
     location_type: { type: DataTypes.STRING, allowNull: false },
     surface_area_bucket: { type: DataTypes.STRING, allowNull: false },
     tariff_amount: { type: DataTypes.FLOAT, allowNull: false },
@@ -127,9 +127,9 @@ LicenseRequest.init(
 export interface LicenseRequestItemAttributes {
   id: number;
   request_id: number;
-  ward_id: number;
   location_type: string;
   surface_area_bucket: string;
+  street_name: string;
   plus_code: string;
   gps_lat: number;
   gps_long: number;
@@ -139,9 +139,9 @@ export interface LicenseRequestItemCreationAttributes extends Optional<LicenseRe
 export class LicenseRequestItem extends Model<LicenseRequestItemAttributes, LicenseRequestItemCreationAttributes> implements LicenseRequestItemAttributes {
   public id!: number;
   public request_id!: number;
-  public ward_id!: number;
   public location_type!: string;
   public surface_area_bucket!: string;
+  public street_name!: string;
   public plus_code!: string;
   public gps_lat!: number;
   public gps_long!: number;
@@ -151,9 +151,9 @@ LicenseRequestItem.init(
   {
     id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     request_id: { type: DataTypes.INTEGER, allowNull: false },
-    ward_id: { type: DataTypes.INTEGER, allowNull: false },
     location_type: { type: DataTypes.STRING, allowNull: false },
     surface_area_bucket: { type: DataTypes.STRING, allowNull: false },
+    street_name: { type: DataTypes.STRING, allowNull: false },
     plus_code: { type: DataTypes.STRING, allowNull: false },
     gps_lat: { type: DataTypes.FLOAT, allowNull: false },
     gps_long: { type: DataTypes.FLOAT, allowNull: false },

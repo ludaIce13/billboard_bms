@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import useAuth from '../hooks/useAuth'
 import client from '../api/client'
+import { formatNumber } from '../utils/formatNumber'
 
 export default function Dashboard() {
   const { user } = useAuth()
@@ -94,91 +95,95 @@ export default function Dashboard() {
   }, [isBilling, isSuperAdmin])
 
   return (
-    <div className="space-y-6">
-      <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 text-white p-8 rounded-2xl shadow-xl">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
-            <p className="text-blue-100">
-              {user ? `Welcome back, ${user.name}` : 'Welcome to BMS - Please login to continue'}
-            </p>
-          </div>
-          {user && (
-            <div className="text-right">
-              <div className="text-sm text-blue-200">Role</div>
-              <div className="text-lg font-semibold">{user.role}</div>
-            </div>
-          )}
-        </div>
+    <div>
+      {/* Welcome Banner */}
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-6 mb-8 shadow-md">
+        <h1 className="text-2xl font-bold text-white mb-1">Welcome back!</h1>
+        <p className="text-blue-100 text-sm">{user ? `Here's what's happening with your billboard operations today.` : 'Welcome to Billboard BMS'}</p>
       </div>
 
       {/* SUPER ADMIN Overview Dashboard */}
       {isSuperAdmin && (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white rounded-xl shadow border border-gray-200 p-6 flex flex-col justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">Operators</p>
-                <p className="text-3xl font-bold text-gray-900">{stats.operators}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {/* Total Operators - Blue */}
+            <div className="bg-white rounded-lg p-6 shadow border border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-gray-600 text-sm font-medium">Total Operators</div>
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
               </div>
-              <Link to="/admin/operators" className="mt-4 text-sm text-blue-600 hover:text-blue-800 font-medium">View operators →</Link>
+              <div className="text-3xl font-bold text-gray-900 mb-1">{formatNumber(stats.operators)}</div>
+              <div className="text-gray-500 text-xs">+12% from last month</div>
             </div>
 
-            <div className="bg-white rounded-xl shadow border border-gray-200 p-6 flex flex-col justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">Pending License Items</p>
-                <p className="text-3xl font-bold text-amber-600">{stats.pendingRequests}</p>
+            {/* Pending Licenses - Amber */}
+            <div className="bg-white rounded-lg p-6 shadow border border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-gray-600 text-sm font-medium">Pending Licenses</div>
+                <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
               </div>
-              <Link to="/admin/requests" className="mt-4 text-sm text-blue-600 hover:text-blue-800 font-medium">Review requests →</Link>
+              <div className="text-3xl font-bold text-gray-900 mb-1">{formatNumber(stats.pendingRequests)}</div>
+              <div className="text-gray-500 text-xs">+1% from last month</div>
             </div>
 
-            <div className="bg-white rounded-xl shadow border border-gray-200 p-6 flex flex-col justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">Approved License Items</p>
-                <p className="text-3xl font-bold text-emerald-600">{stats.approvedRequests}</p>
+            {/* Approved Licenses - Blue */}
+            <div className="bg-white rounded-lg p-6 shadow border border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-gray-600 text-sm font-medium">Approved Licenses</div>
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
               </div>
-              <Link to="/admin/requests" className="mt-4 text-sm text-blue-600 hover:text-blue-800 font-medium">View approvals →</Link>
+              <div className="text-3xl font-bold text-gray-900 mb-1">{formatNumber(stats.approvedRequests)}</div>
+              <div className="text-gray-500 text-xs">+17% from last month</div>
             </div>
 
-            <div className="bg-white rounded-xl shadow border border-gray-200 p-6 flex flex-col justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">Invoices</p>
-                <p className="text-3xl font-bold text-indigo-600">{stats.invoices}</p>
+            {/* Total Invoices - Green */}
+            <div className="bg-white rounded-lg p-6 shadow border border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-gray-600 text-sm font-medium">Total Invoices</div>
+                <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2zM10 8.5a.5.5 0 11-1 0 .5.5 0 011 0zm5 5a.5.5 0 11-1 0 .5.5 0 011 0z" />
+                  </svg>
+                </div>
               </div>
-              <Link to="/admin/invoices" className="mt-4 text-sm text-blue-600 hover:text-blue-800 font-medium">View invoices →</Link>
+              <div className="text-3xl font-bold text-gray-900 mb-1">{formatNumber(stats.invoices)}</div>
+              <div className="text-gray-500 text-xs">+12% from last month</div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-            <div className="bg-white rounded-xl shadow border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold mb-4 text-gray-800">System Overview</h2>
-              <ul className="space-y-3 text-sm text-gray-700">
-                <li>• Monitor operator approvals and license workflows.</li>
-                <li>• Oversee billing activity and REVMIS invoice integrations.</li>
-                <li>• Ensure roles and access are correctly configured.</li>
-              </ul>
-            </div>
-
-            <div className="bg-white rounded-xl shadow border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold mb-4 text-gray-800">Super Admin Quick Actions</h2>
-              <div className="space-y-3">
-                <Link to="/admin/users" className="flex items-center justify-between p-3 rounded-lg border hover:border-blue-500 hover:bg-blue-50 transition">
-                  <span className="text-sm font-medium text-gray-800">Manage System Users</span>
-                  <span className="text-xs text-blue-600">Open →</span>
-                </Link>
-                <Link to="/admin/operators" className="flex items-center justify-between p-3 rounded-lg border hover:border-purple-500 hover:bg-purple-50 transition">
-                  <span className="text-sm font-medium text-gray-800">Review Operators</span>
-                  <span className="text-xs text-purple-600">Open →</span>
-                </Link>
-                <Link to="/admin/requests" className="flex items-center justify-between p-3 rounded-lg border hover:border-emerald-500 hover:bg-emerald-50 transition">
-                  <span className="text-sm font-medium text-gray-800">Approve License Requests</span>
-                  <span className="text-xs text-emerald-600">Open →</span>
-                </Link>
-                <Link to="/admin/invoices" className="flex items-center justify-between p-3 rounded-lg border hover:border-orange-500 hover:bg-orange-50 transition">
-                  <span className="text-sm font-medium text-gray-800">Monitor Invoices</span>
-                  <span className="text-xs text-orange-600">Open →</span>
-                </Link>
-              </div>
+          {/* Quick Actions */}
+          <div className="bg-white rounded-xl shadow border border-gray-200 p-8">
+            <h2 className="text-xl font-bold mb-2 text-gray-900">Quick Actions</h2>
+            <p className="text-gray-600 text-sm mb-6">Common tasks</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Link to="/admin/requests" className="group bg-blue-600 hover:bg-blue-700 rounded-lg p-6 shadow transition-all duration-200">
+                <div className="text-white font-semibold mb-1">Review Pending Licenses</div>
+                <div className="text-blue-100 text-sm">Approve or reject license requests</div>
+              </Link>
+              <Link to="/admin/invoices" className="group bg-emerald-600 hover:bg-emerald-700 rounded-lg p-6 shadow transition-all duration-200">
+                <div className="text-white font-semibold mb-1">Process Invoices</div>
+                <div className="text-emerald-100 text-sm">Generate and send invoices</div>
+              </Link>
+              <Link to="/admin/operators" className="group bg-blue-600 hover:bg-blue-700 rounded-lg p-6 shadow transition-all duration-200">
+                <div className="text-white font-semibold mb-1">Manage Operators</div>
+                <div className="text-blue-100 text-sm">Review operator applications</div>
+              </Link>
+              <Link to="/admin/tariffs" className="group bg-emerald-600 hover:bg-emerald-700 rounded-lg p-6 shadow transition-all duration-200">
+                <div className="text-white font-semibold mb-1">Manage Tariffs</div>
+                <div className="text-emerald-100 text-sm">Update tariff rates</div>
+              </Link>
             </div>
           </div>
         </>
@@ -193,7 +198,7 @@ export default function Dashboard() {
               <div>
                 <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">Pending Invoice Requests</p>
                 <p className="text-3xl font-bold text-amber-600">
-                  {loadingBillingStats ? '…' : billingStats.pendingInvoiceRequests}
+                  {loadingBillingStats ? '…' : formatNumber(billingStats.pendingInvoiceRequests)}
                 </p>
               </div>
               <Link to="/admin/invoices" className="mt-4 text-xs text-blue-600 hover:text-blue-800 font-medium">View pending →</Link>
@@ -203,7 +208,7 @@ export default function Dashboard() {
               <div>
                 <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">Generated Invoices</p>
                 <p className="text-3xl font-bold text-indigo-600">
-                  {loadingBillingStats ? '…' : billingStats.generatedInvoices}
+                  {loadingBillingStats ? '…' : formatNumber(billingStats.generatedInvoices)}
                 </p>
               </div>
               <Link to="/admin/invoices" className="mt-4 text-xs text-blue-600 hover:text-blue-800 font-medium">Open invoices →</Link>
@@ -213,7 +218,7 @@ export default function Dashboard() {
               <div>
                 <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">Sent to REVMIS</p>
                 <p className="text-3xl font-bold text-emerald-600">
-                  {loadingBillingStats ? '…' : billingStats.sentToRevmis}
+                  {loadingBillingStats ? '…' : formatNumber(billingStats.sentToRevmis)}
                 </p>
               </div>
               <Link to="/admin/invoices" className="mt-4 text-xs text-blue-600 hover:text-blue-800 font-medium">Review status →</Link>

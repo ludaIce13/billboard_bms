@@ -43,7 +43,6 @@ export interface RevmisInvoiceCreatePayload {
   operatorEmail: string;
   invoiceDate: string; // YYYY-MM-DD
   licenseNo: string;
-  wardIds: number[];
   locationTypes: string[];
   plusCodes: string[];
   surfaceAreas: string[];
@@ -117,7 +116,6 @@ export function buildRevmisInvoicePayload(data: Partial<RevmisInvoiceCreatePaylo
     operatorEmail: data.operatorEmail || '',
     invoiceDate: data.invoiceDate || today,
     licenseNo: data.licenseNo || '',
-    wardIds: data.wardIds || [],
     locationTypes: data.locationTypes || [],
     plusCodes: data.plusCodes || [],
     surfaceAreas: data.surfaceAreas || [],

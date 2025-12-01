@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
 import client from '../api/client'
-import { LOCATION_TYPES, SURFACE_AREA_BUCKETS, WARDS } from '../utils/constants'
+import { LOCATION_TYPES, SURFACE_AREA_BUCKETS } from '../utils/constants'
 
 export default function OperatorRequest() {
-  const emptyItem = { ward_id: '', location_type: '', surface_area_bucket: '', gps_lat: '', gps_long: '' }
-  const [operatorId, setOperatorId] = useState('')
+  const emptyItem = { location_type: '', surface_area_bucket: '', street_name: '', gps_lat: '', gps_long: '' }
+  const [phoneNumber, setPhoneNumber] = useState('')
+  const [operatorId, setOperatorId] = useState(null)
   const [councilId, setCouncilId] = useState('')
   const [councils, setCouncils] = useState([])
   const [items, setItems] = useState([ { ...emptyItem } ])
@@ -28,20 +29,24 @@ export default function OperatorRequest() {
     loadCouncils()
   }, [])
 
-  // Check operator status when operator ID changes
+  // Check operator status when phone number changes
   useEffect(() => {
     const checkOperator = async () => {
-      if (!operatorId || operatorId.length === 0) {
+      if (!phoneNumber || phoneNumber.length === 0) {
         setOperatorStatus(null)
+        setOperatorId(null)
         return
       }
       
       setCheckingOperator(true)
       try {
-        const res = await client.get(`/operators/${operatorId}`)
+        // Lookup operator by phone number
+        const res = await client.get(`/operators/lookup?phone=${encodeURIComponent(phoneNumber)}`)
         setOperatorStatus(res.data)
+        setOperatorId(res.data.id)
       } catch (err) {
         setOperatorStatus({ notFound: true })
+        setOperatorId(null)
       } finally {
         setCheckingOperator(false)
       }
@@ -49,7 +54,7 @@ export default function OperatorRequest() {
     
     const timer = setTimeout(checkOperator, 500) // Debounce
     return () => clearTimeout(timer)
-  }, [operatorId])
+  }, [phoneNumber])
 
   const setItem = (idx, field, value) => {
     const copy = items.slice()
@@ -64,13 +69,20 @@ export default function OperatorRequest() {
     setMsg('')
     setLoading(true)
     try {
+      if (!operatorId) {
+        setMsg('Please enter a valid phone number for an approved operator')
+        setMsgType('error')
+        setLoading(false)
+        return
+      }
+
       const payload = {
-        operator_id: Number(operatorId),
+        operator_id: operatorId,
         council_id: Number(councilId),
         items: items.map(it => ({
-          ward_id: Number(it.ward_id),
           location_type: it.location_type,
           surface_area_bucket: it.surface_area_bucket,
+          street_name: it.street_name,
           gps_lat: Number(it.gps_lat),
           gps_long: Number(it.gps_long)
         }))
@@ -79,7 +91,8 @@ export default function OperatorRequest() {
       setMsg(`✓ License request submitted successfully! Request #${res.data?.id}. It will be reviewed by the administrator.`)
       setMsgType('success')
       setItems([ { ...emptyItem } ])
-      setOperatorId('')
+      setPhoneNumber('')
+      setOperatorId(null)
       setCouncilId('')
     } catch (err) {
       setMsg(err.response?.data?.message || 'Failed to submit request. Please check your input.')
@@ -93,9 +106,25 @@ export default function OperatorRequest() {
     <Layout>
       <div className="max-w-4xl mx-auto">
         <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
-          <div className="mb-6">
+          <div className="mb-8">
             <h2 className="text-2xl font-bold text-gray-800 mb-2">Create License Request</h2>
             <p className="text-gray-600">Submit billboard license requests for multiple locations</p>
+          </div>
+
+          {/* Important Notice */}
+          <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-600 rounded-r">
+            <div className="flex items-start gap-3">
+              <svg className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <h3 className="font-semibold text-blue-900 mb-1">Important Notice</h3>
+                <p className="text-sm text-blue-800">
+                  <strong>Your operator account must be approved first</strong> before you can submit license requests. 
+                  Please ensure you have registered as an operator and your application has been approved by the system administrator.
+                </p>
+              </div>
+            </div>
           </div>
           
           {msg && (
@@ -111,28 +140,28 @@ export default function OperatorRequest() {
           <form onSubmit={submit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Operator ID <span className="text-red-500">*</span>
+                Phone Number <span className="text-red-500">*</span>
               </label>
               <input 
                 className="border border-gray-300 p-3 w-full rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-                value={operatorId} 
-                onChange={e=>setOperatorId(e.target.value)} 
-                placeholder="e.g. 1" 
+                value={phoneNumber} 
+                onChange={e=>setPhoneNumber(e.target.value)} 
+                placeholder="e.g. +23276610612" 
                 required
-                type="number"
+                type="tel"
               />
-              <p className="text-xs text-gray-500 mt-1">Your registered operator ID</p>
+              <p className="text-xs text-gray-500 mt-1">Enter your registered phone number for verification</p>
               
               {/* Operator Status Feedback */}
               {checkingOperator && (
                 <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-700">
-                  🔍 Checking operator status...
+                  🔍 Verifying phone number...
                 </div>
               )}
               
               {operatorStatus && operatorStatus.notFound && (
                 <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
-                  ❌ Operator ID {operatorId} not found. Please register as an operator first.
+                  ❌ Phone number {phoneNumber} not found. Please register as an operator first.
                 </div>
               )}
               
@@ -204,19 +233,6 @@ export default function OperatorRequest() {
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Ward <span className="text-red-500">*</span></label>
-                      <select 
-                        className="border border-gray-300 p-3 w-full rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-                        value={it.ward_id} 
-                        onChange={e=>setItem(idx,'ward_id', e.target.value)}
-                        required
-                      >
-                        <option value="">Select Ward</option>
-                        {WARDS.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
-                      </select>
-                    </div>
-                    
-                    <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Location Type <span className="text-red-500">*</span></label>
                       <select 
                         className="border border-gray-300 p-3 w-full rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
@@ -240,6 +256,18 @@ export default function OperatorRequest() {
                         <option value="">Select Surface Area</option>
                         {SURFACE_AREA_BUCKETS.map(sa => <option key={sa} value={sa}>{sa}</option>)}
                       </select>
+                    </div>
+                    
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Street Name <span className="text-red-500">*</span></label>
+                      <input 
+                        className="border border-gray-300 p-3 w-full rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                        placeholder="e.g. Peninsula Road, Waterloo Highway" 
+                        value={it.street_name} 
+                        onChange={e=>setItem(idx,'street_name', e.target.value)}
+                        required
+                        type="text"
+                      />
                     </div>
                     
                     <div className="md:col-span-2 grid grid-cols-2 gap-4">

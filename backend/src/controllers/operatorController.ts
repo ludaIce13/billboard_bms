@@ -70,6 +70,28 @@ export async function getOperator(req: Request, res: Response) {
   }
 }
 
+export async function getOperatorByPhone(req: Request, res: Response) {
+  try {
+    const { phone } = req.query;
+    if (!phone) {
+      return res.status(400).json({ message: 'Phone number is required' });
+    }
+    const op = await Operator.findOne({ where: { phone: phone as string } });
+    if (!op) {
+      return res.status(404).json({ message: 'Operator not found with this phone number' });
+    }
+    // Return only necessary fields for security
+    res.json({
+      id: op.id,
+      business_name: op.business_name,
+      phone: op.phone,
+      status: op.status
+    });
+  } catch (e) {
+    res.status(500).json({ message: 'Failed to lookup operator' });
+  }
+}
+
 export async function approveOperator(req: Request, res: Response) {
   try {
     const id = Number(req.params.id);
@@ -83,8 +105,11 @@ export async function approveOperator(req: Request, res: Response) {
         op.email,
         'Billboard Operator Application Approved',
         `<p>Dear ${op.business_name},</p>
-         <p>Your operator application has been <strong>approved</strong>.</p>
-         <p>You can now proceed to submit billboard license requests in the system.</p>
+         <p>Your operator application has been <strong>approved</strong>!</p>
+         <p>You can now proceed to submit billboard license requests.</p>
+         <p><strong>Submit a New License Request:</strong><br/>
+         <a href="http://localhost:5173/operator-request" style="display: inline-block; padding: 10px 20px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Click Here to Submit License Request</a></p>
+         <p>Or copy this link: <a href="http://localhost:5173/operator-request">http://localhost:5173/operator-request</a></p>
          <p>Thank you.</p>`
       );
     } catch (err) {

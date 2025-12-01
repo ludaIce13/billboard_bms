@@ -3,6 +3,7 @@ import client from '../../api/client'
 
 export default function AdminLicenses() {
   const [licenses, setLicenses] = useState([])
+  const [councils, setCouncils] = useState([])
   const [loading, setLoading] = useState(true)
   const [msg, setMsg] = useState('')
   const [operatorFilter, setOperatorFilter] = useState('')
@@ -11,7 +12,14 @@ export default function AdminLicenses() {
 
   const load = async () => {
     setLoading(true)
-    try { const res = await client.get('/licenses'); setLicenses(res.data || []) } catch { setMsg('Failed to load licenses') }
+    try { 
+      const [licRes, councilRes] = await Promise.all([
+        client.get('/licenses'),
+        client.get('/councils')
+      ])
+      setLicenses(licRes.data || [])
+      setCouncils(councilRes.data || [])
+    } catch { setMsg('Failed to load licenses') }
     setLoading(false)
   }
   useEffect(()=>{ load() }, [])
@@ -54,7 +62,7 @@ export default function AdminLicenses() {
                 <th className="text-left p-3">License No</th>
                 <th className="text-left p-3">Issue Date</th>
                 <th className="text-left p-3">Operator Name</th>
-                <th className="text-left p-3">Ward ID</th>
+                <th className="text-left p-3">Council</th>
                 <th className="text-left p-3">Plus Code</th>
                 <th className="text-left p-3">Actions</th>
               </tr>
@@ -71,12 +79,14 @@ export default function AdminLicenses() {
                 .map(l => {
                   const items = l.invoice?.license_request?.license_request_items || []
                   const firstItem = items[0]
+                  const councilId = l.invoice?.license_request?.council_id
+                  const council = councils.find(c => c.id === councilId)
                   return (
                   <tr key={l.id} className="border-t">
                     <td className="p-3 font-medium">{l.license_no}</td>
                     <td className="p-3">{l.issue_date}</td>
                     <td className="p-3">{l.invoice?.operator?.business_name || '-'}</td>
-                    <td className="p-3">{firstItem ? firstItem.ward_id : '-'}</td>
+                    <td className="p-3">{council?.name || councilId || '-'}</td>
                     <td className="p-3">{firstItem ? firstItem.plus_code : '-'}</td>
                     <td className="p-3">
                       <div className="flex gap-2">
@@ -113,23 +123,29 @@ export default function AdminLicenses() {
                 <table className="min-w-full text-sm border">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="text-left p-2 border">Ward ID</th>
+                      <th className="text-left p-2 border">Council</th>
                       <th className="text-left p-2 border">Location Type</th>
+                      <th className="text-left p-2 border">Street Name</th>
                       <th className="text-left p-2 border">Plus Code</th>
                       <th className="text-left p-2 border">Surface Area</th>
                       <th className="text-left p-2 border">GPS Coordinates</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {(selectedLicense.invoice?.license_request?.license_request_items || []).map((item, idx) => (
-                      <tr key={idx} className="border-t">
-                        <td className="p-2 border">{item.ward_id}</td>
-                        <td className="p-2 border">{item.location_type}</td>
-                        <td className="p-2 border font-mono text-xs">{item.plus_code}</td>
-                        <td className="p-2 border">{item.surface_area_bucket}</td>
-                        <td className="p-2 border text-xs">{item.gps_lat}, {item.gps_long}</td>
-                      </tr>
-                    ))}
+                    {(selectedLicense.invoice?.license_request?.license_request_items || []).map((item, idx) => {
+                      const councilId = selectedLicense.invoice?.license_request?.council_id
+                      const council = councils.find(c => c.id === councilId)
+                      return (
+                        <tr key={idx} className="border-t">
+                          <td className="p-2 border">{council?.name || councilId || '-'}</td>
+                          <td className="p-2 border">{item.location_type}</td>
+                          <td className="p-2 border">{item.street_name || '-'}</td>
+                          <td className="p-2 border font-mono text-xs">{item.plus_code}</td>
+                          <td className="p-2 border">{item.surface_area_bucket}</td>
+                          <td className="p-2 border text-xs">{item.gps_lat}, {item.gps_long}</td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>

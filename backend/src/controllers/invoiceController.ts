@@ -12,6 +12,7 @@ export async function generateInvoice(req: Request, res: Response) {
     let resolvedItemIds = Array.isArray(item_ids) ? item_ids as number[] : undefined;
 
     // If only request_id is provided, resolve operator and APPROVED items from that request
+    let councilId: number | undefined;
     if (request_id && (!resolvedOperatorId || !resolvedItemIds || resolvedItemIds.length === 0)) {
       const request = await LicenseRequest.findByPk(request_id);
       if (!request) {
@@ -19,6 +20,7 @@ export async function generateInvoice(req: Request, res: Response) {
       }
 
       resolvedOperatorId = request.operator_id;
+      councilId = request.council_id;
 
       const requestItems = await LicenseRequestItem.findAll({ where: { request_id } });
       const approvedFromRequest = requestItems.filter(i => i.status === 'APPROVED');
@@ -32,6 +34,11 @@ export async function generateInvoice(req: Request, res: Response) {
       return res.status(400).json({ message: 'operator_id and item_ids required, or provide a valid request_id with approved items' });
     }
 
+    // If council_id not set from request, use env default
+    if (!councilId) {
+      councilId = Number(process.env.REVMIS_COUNCIL_ID || 1);
+    }
+
     const items = await LicenseRequestItem.findAll({ where: { id: resolvedItemIds } });
     const approvedItems = items.filter(i => i.status === 'APPROVED');
     if (approvedItems.length === 0) return res.status(400).json({ message: 'No APPROVED items to invoice' });
@@ -41,7 +48,7 @@ export async function generateInvoice(req: Request, res: Response) {
     for (const it of approvedItems) {
       const tariff = await Tariff.findOne({
         where: {
-          ward_id: it.ward_id,
+          council_id: councilId,
           location_type: it.location_type,
           surface_area_bucket: it.surface_area_bucket,
         },
@@ -50,14 +57,14 @@ export async function generateInvoice(req: Request, res: Response) {
       if (!tariff) {
         console.warn('No matching tariff found for item', {
           item_id: it.id,
-          ward_id: it.ward_id,
+          council_id: councilId,
           location_type: it.location_type,
           surface_area_bucket: it.surface_area_bucket,
         });
       } else {
         console.log('Matched tariff for item', {
           item_id: it.id,
-          ward_id: it.ward_id,
+          council_id: councilId,
           location_type: it.location_type,
           surface_area_bucket: it.surface_area_bucket,
           tariff_amount: tariff.tariff_amount,
@@ -130,7 +137,6 @@ export async function sendInvoiceToRevmis(req: Request, res: Response) {
     const licenseRequest: any = (invoice as any).license_request;
     const items: any[] = licenseRequest?.license_request_items || licenseRequest?.licenseRequestItems || [];
 
-    const wardIds = items.map(i => i.ward_id as number);
     const locationTypes = items.map(i => i.location_type as string);
     const plusCodes = items.map(i => i.plus_code as string);
     const surfaceAreas = items.map(i => i.surface_area_bucket as string);
@@ -153,7 +159,6 @@ export async function sendInvoiceToRevmis(req: Request, res: Response) {
       operatorEmail: operator?.email || '',
       invoiceDate,
       licenseNo: invoice.invoice_no,
-      wardIds,
       locationTypes,
       plusCodes,
       surfaceAreas,

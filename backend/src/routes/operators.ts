@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { approveOperator, createOperator, getOperator, listOperators, rejectOperator } from '../controllers/operatorController';
+import { approveOperator, createOperator, getOperator, getOperatorByPhone, listOperators, rejectOperator } from '../controllers/operatorController';
 import { requireRole, verifyToken } from '../middleware/auth';
 import { validateBody } from '../middleware/validate';
 
@@ -10,6 +10,7 @@ router.post('/', validateBody([
   { name: 'email', required: true, type: 'email' },
   { name: 'address', required: true, type: 'string' },
 ]), createOperator);
+router.get('/lookup', getOperatorByPhone); // Public endpoint for phone lookup
 router.get('/', verifyToken, requireRole(['SUPER_ADMIN', 'MANAGER']), listOperators);
 router.get('/:id', getOperator); // Public endpoint for operators to check their status
 router.post('/:id/approve', verifyToken, requireRole(['SUPER_ADMIN', 'MANAGER']), approveOperator);

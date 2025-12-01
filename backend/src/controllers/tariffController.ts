@@ -41,7 +41,7 @@ export async function uploadTariffsCsv(req: Request, res: Response) {
       const row = records[i];
       const rowNum = i + 2; // +2 because: +1 for 1-indexed, +1 for header row
       
-      const ward_id = Number(row.ward_id || row.Ward || row['Ward No.']);
+      const council_id = Number(row.council_id || row.Council || row['Council ID']);
       const location_type = String(row.location_type || row.Location || '').trim();
       const surface_area_bucket = String(row.surface_area_bucket || row['Surface Area'] || '').trim();
       const tariff_amount = Number(row.tariff_amount || row['Tariff Amount']);
@@ -49,8 +49,8 @@ export async function uploadTariffsCsv(req: Request, res: Response) {
       // Detailed validation with error messages
       const rowErrors: string[] = [];
       
-      if (!Number.isFinite(ward_id) || ward_id <= 0) {
-        rowErrors.push(`Ward ID must be a positive number (got: "${row.ward_id || row.Ward || row['Ward No.']}")`);
+      if (!Number.isFinite(council_id) || council_id <= 0) {
+        rowErrors.push(`Council ID must be a positive number (got: "${row.council_id || row.Council || row['Council ID']}")`);
       }
       
       if (!isValidLocationType(location_type)) {
@@ -70,7 +70,7 @@ export async function uploadTariffsCsv(req: Request, res: Response) {
         continue;
       }
       
-      await Tariff.create({ ward_id, location_type, surface_area_bucket, tariff_amount });
+      await Tariff.create({ council_id, location_type, surface_area_bucket, tariff_amount });
       created++;
     }
     
@@ -100,8 +100,8 @@ export async function updateTariff(req: Request, res: Response) {
     const tariff = await Tariff.findByPk(id);
     if (!tariff) return res.status(404).json({ message: 'Tariff not found' });
     
-    const { ward_id, location_type, surface_area_bucket, tariff_amount } = req.body;
-    if (ward_id !== undefined) tariff.ward_id = ward_id;
+    const { council_id, location_type, surface_area_bucket, tariff_amount } = req.body;
+    if (council_id !== undefined) tariff.council_id = council_id;
     if (location_type !== undefined) tariff.location_type = location_type;
     if (surface_area_bucket !== undefined) tariff.surface_area_bucket = surface_area_bucket;
     if (tariff_amount !== undefined) tariff.tariff_amount = tariff_amount;

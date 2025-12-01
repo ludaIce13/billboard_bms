@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react'
 import client from '../../api/client'
 import useToast from '../../hooks/useToast'
 import useAuth from '../../hooks/useAuth'
+import { formatNumber } from '../../utils/formatNumber'
 
 export default function AdminInvoices() {
   const [tab, setTab] = useState('pending') // 'pending' or 'generated'
   const [approvedRequests, setApprovedRequests] = useState([])
   const [invoices, setInvoices] = useState([])
   const [tariffs, setTariffs] = useState([])
+  const [councils, setCouncils] = useState([])
   const [selectedInvoice, setSelectedInvoice] = useState(null)
   const [loading, setLoading] = useState(true)
   const { toasts, showToast, removeToast } = useToast()
@@ -18,16 +20,18 @@ export default function AdminInvoices() {
   const loadData = async () => {
     setLoading(true)
     try {
-      // Load license requests + invoices + tariffs
-      const [reqRes, invRes, tariffRes] = await Promise.all([
+      // Load license requests + invoices + tariffs + councils
+      const [reqRes, invRes, tariffRes, councilRes] = await Promise.all([
         client.get('/license-requests'),
         client.get('/invoices'),
         client.get('/tariffs'),
+        client.get('/councils'),
       ])
 
       const allRequests = reqRes.data || []
       const allInvoices = invRes.data || []
       const allTariffs = tariffRes.data || []
+      const allCouncils = councilRes.data || []
 
       // Build a set of request_ids that already have invoices
       const invoicedRequestIds = new Set(
@@ -49,6 +53,7 @@ export default function AdminInvoices() {
       setApprovedRequests(approved)
       setInvoices(allInvoices)
       setTariffs(allTariffs)
+      setCouncils(allCouncils)
     } catch (e) {
       showToast('Failed to load data', 'error')
     }
@@ -101,10 +106,10 @@ export default function AdminInvoices() {
     setSelectedInvoice(invoice)
   }
 
-  const getItemAmount = (item) => {
-    if (!item) return null
+  const getItemAmount = (item, councilId) => {
+    if (!item || !councilId) return null
     const match = tariffs.find(t =>
-      String(t.ward_id) === String(item.ward_id) &&
+      String(t.council_id) === String(councilId) &&
       t.location_type === item.location_type &&
       t.surface_area_bucket === item.surface_area_bucket
     )
@@ -265,9 +270,9 @@ export default function AdminInvoices() {
                         <td className="p-2 align-top font-medium text-gray-800">{inv.invoice_no}</td>
                         <td className="p-2 align-top">{inv.operator?.business_name || 'N/A'}</td>
                         <td className="p-2 align-top text-xs text-gray-600">{new Date(inv.createdAt).toLocaleDateString()}</td>
-                        <td className="p-2 align-top">{inv.subtotal?.toLocaleString() || 0}</td>
-                        <td className="p-2 align-top">{inv.gst?.toLocaleString() || 0}</td>
-                        <td className="p-2 align-top font-semibold text-blue-600">{inv.total?.toLocaleString() || 0}</td>
+                        <td className="p-2 align-top">{formatNumber(inv.subtotal)}</td>
+                        <td className="p-2 align-top">{formatNumber(inv.gst)}</td>
+                        <td className="p-2 align-top font-semibold text-blue-600">{formatNumber(inv.total)}</td>
                         <td className="p-2 align-top">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
                             inv.revmis_status === 'sent' ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
@@ -323,87 +328,91 @@ export default function AdminInvoices() {
               <div className="text-sm text-gray-500">Invoice No: {selectedInvoice.invoice_no}</div>
             </div>
 
-            {/* Operator Information */}
-            <div className="mb-6 border border-gray-300 rounded-lg overflow-hidden">
-              <table className="w-full">
-                <tbody>
-                  <tr className="border-b border-gray-300">
-                    <td className="px-4 py-3 bg-gray-50 font-semibold w-1/3">Operator ID</td>
-                    <td className="px-4 py-3">{selectedInvoice.operator_id}</td>
-                  </tr>
-                  <tr className="border-b border-gray-300">
-                    <td className="px-4 py-3 bg-gray-50 font-semibold">Operator Name</td>
-                    <td className="px-4 py-3">{selectedInvoice.operator?.business_name || 'N/A'}</td>
-                  </tr>
-                  <tr className="border-b border-gray-300">
-                    <td className="px-4 py-3 bg-gray-50 font-semibold">Address</td>
-                    <td className="px-4 py-3">{selectedInvoice.operator?.address || 'N/A'}</td>
-                  </tr>
-                  <tr className="border-b border-gray-300">
-                    <td className="px-4 py-3 bg-gray-50 font-semibold">Phone No.</td>
-                    <td className="px-4 py-3">{selectedInvoice.operator?.phone || 'N/A'}</td>
-                  </tr>
-                  <tr className="border-b border-gray-300">
-                    <td className="px-4 py-3 bg-gray-50 font-semibold">e-Mail</td>
-                    <td className="px-4 py-3">{selectedInvoice.operator?.email || 'N/A'}</td>
-                  </tr>
-                  <tr className="border-b border-gray-300">
-                    <td className="px-4 py-3 bg-gray-50 font-semibold">Request Date</td>
-                    <td className="px-4 py-3">{selectedInvoice.license_request?.createdAt ? new Date(selectedInvoice.license_request.createdAt).toLocaleDateString() : 'N/A'}</td>
-                  </tr>
-                  <tr>
-                    <td className="px-4 py-3 bg-gray-50 font-semibold">Invoice Date</td>
-                    <td className="px-4 py-3">{new Date(selectedInvoice.createdAt).toLocaleDateString()}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            {/* Side-by-side Layout: Operator Info + Billboard Details */}
+            <div className="mb-6 grid grid-cols-2 gap-6">
+              {/* Left Side - Operator Information */}
+              <div className="border border-gray-300 rounded-lg overflow-hidden">
+                <table className="w-full text-sm">
+                  <tbody>
+                    <tr className="border-b border-gray-300">
+                      <td className="px-3 py-2 bg-gray-50 font-semibold w-2/5">Operator ID</td>
+                      <td className="px-3 py-2">{selectedInvoice.operator_id}</td>
+                    </tr>
+                    <tr className="border-b border-gray-300">
+                      <td className="px-3 py-2 bg-gray-50 font-semibold">Operator Name</td>
+                      <td className="px-3 py-2">{selectedInvoice.operator?.business_name || 'N/A'}</td>
+                    </tr>
+                    <tr className="border-b border-gray-300">
+                      <td className="px-3 py-2 bg-gray-50 font-semibold">Address</td>
+                      <td className="px-3 py-2">{selectedInvoice.operator?.address || 'N/A'}</td>
+                    </tr>
+                    <tr className="border-b border-gray-300">
+                      <td className="px-3 py-2 bg-gray-50 font-semibold">Phone No.</td>
+                      <td className="px-3 py-2">{selectedInvoice.operator?.phone || 'N/A'}</td>
+                    </tr>
+                    <tr className="border-b border-gray-300">
+                      <td className="px-3 py-2 bg-gray-50 font-semibold">e-Mail</td>
+                      <td className="px-3 py-2">{selectedInvoice.operator?.email || 'N/A'}</td>
+                    </tr>
+                    <tr className="border-b border-gray-300">
+                      <td className="px-3 py-2 bg-gray-50 font-semibold">Request Date</td>
+                      <td className="px-3 py-2">{selectedInvoice.license_request?.createdAt ? new Date(selectedInvoice.license_request.createdAt).toLocaleDateString() : 'N/A'}</td>
+                    </tr>
+                    <tr>
+                      <td className="px-3 py-2 bg-gray-50 font-semibold">Invoice Date</td>
+                      <td className="px-3 py-2">{new Date(selectedInvoice.createdAt).toLocaleDateString()}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
 
-            {/* Billboard Details Table */}
-            <div className="mb-6 border border-gray-300 rounded-lg overflow-hidden">
-              <table className="w-full">
+              {/* Right Side - Billboard Details Table */}
+              <div className="border border-gray-300 rounded-lg overflow-hidden">
+              <table className="w-full text-xs">
                 <thead>
                   <tr className="bg-gray-100 border-b border-gray-300">
-                    <th className="px-4 py-3 text-left font-semibold">License No.</th>
-                    <th className="px-4 py-3 text-left font-semibold">Ward ID</th>
-                    <th className="px-4 py-3 text-left font-semibold">Location Type</th>
-                    <th className="px-4 py-3 text-left font-semibold">Plus Code</th>
-                    <th className="px-4 py-3 text-left font-semibold">Surface Area</th>
-                    <th className="px-4 py-3 text-right font-semibold">Amount (Le)</th>
+                    <th className="px-2 py-2 text-left font-semibold text-xs">Council</th>
+                    <th className="px-2 py-2 text-left font-semibold text-xs">Location</th>
+                    <th className="px-2 py-2 text-left font-semibold text-xs">Street</th>
+                    <th className="px-2 py-2 text-left font-semibold text-xs">Plus Code</th>
+                    <th className="px-2 py-2 text-left font-semibold text-xs">Surface</th>
+                    <th className="px-2 py-2 text-right font-semibold text-xs">Amount (Le)</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {(selectedInvoice.license_request?.license_request_items || selectedInvoice.license_request?.licenseRequestItems || []).map((item, idx) => (
+                  {(selectedInvoice.license_request?.license_request_items || selectedInvoice.license_request?.licenseRequestItems || []).map((item, idx) => {
+                    const councilId = selectedInvoice.license_request?.council_id
+                    const council = councils.find(c => c.id === councilId)
+                    return (
                     <tr key={idx} className="border-b border-gray-300">
-                      <td className="px-4 py-3">{item.license?.license_no || '-'}</td>
-                      <td className="px-4 py-3">{item.ward_id}</td>
-                      <td className="px-4 py-3">{item.location_type}</td>
-                      <td className="px-4 py-3">{item.plus_code || '-'}</td>
-                      <td className="px-4 py-3">{item.surface_area_bucket || item.surface_area}</td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-2 py-2 text-xs">{council?.name || councilId || '-'}</td>
+                      <td className="px-2 py-2 text-xs">{item.location_type}</td>
+                      <td className="px-2 py-2 text-xs">{item.street_name || '-'}</td>
+                      <td className="px-2 py-2 text-xs font-mono">{item.plus_code || '-'}</td>
+                      <td className="px-2 py-2 text-xs">{item.surface_area_bucket || item.surface_area}</td>
+                      <td className="px-2 py-2 text-right">
                         {(() => {
-                          const amt = getItemAmount(item)
-                          return amt != null
-                            ? amt.toLocaleString()
-                            : '-'
+                          const amt = getItemAmount(item, councilId)
+                          return formatNumber(amt)
                         })()}
                       </td>
                     </tr>
-                  ))}
+                  )})}
                   <tr className="border-b border-gray-300 bg-gray-50">
-                    <td colSpan="5" className="px-4 py-3 font-semibold text-right">Sub-Total</td>
-                    <td className="px-4 py-3 text-right font-semibold">{selectedInvoice.subtotal?.toLocaleString() || 0}</td>
+                    <td colSpan="5" className="px-2 py-2 font-semibold text-right text-xs">Sub-Total</td>
+                    <td className="px-2 py-2 text-right font-semibold">{formatNumber(selectedInvoice.subtotal)}</td>
                   </tr>
                   <tr className="border-b border-gray-300 bg-gray-50">
-                    <td colSpan="5" className="px-4 py-3 font-semibold text-right">GST</td>
-                    <td className="px-4 py-3 text-right font-semibold">{selectedInvoice.gst?.toLocaleString() || 0}</td>
+                    <td colSpan="5" className="px-2 py-2 font-semibold text-right text-xs">GST</td>
+                    <td className="px-2 py-2 text-right font-semibold">{formatNumber(selectedInvoice.gst)}</td>
                   </tr>
                   <tr className="bg-blue-50">
-                    <td colSpan="5" className="px-4 py-3 text-right font-bold text-lg">Total</td>
-                    <td className="px-4 py-3 text-right font-bold text-blue-600 text-lg">{selectedInvoice.total?.toLocaleString() || 0}</td>
+                    <td colSpan="5" className="px-2 py-2 text-right font-bold text-sm">Total</td>
+                    <td className="px-2 py-2 text-right font-bold text-blue-600 text-sm">{formatNumber(selectedInvoice.total)}</td>
                   </tr>
                 </tbody>
               </table>
+              </div>
             </div>
 
             {/* Actions */}

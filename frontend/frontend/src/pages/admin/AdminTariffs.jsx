@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import client from '../../api/client'
 import useAuth from '../../hooks/useAuth'
-import { WARDS, LOCATION_TYPES, SURFACE_AREA_BUCKETS } from '../../utils/constants'
+import { LOCATION_TYPES, SURFACE_AREA_BUCKETS } from '../../utils/constants'
+import { formatNumber } from '../../utils/formatNumber'
 
 export default function AdminTariffs() {
   const { user } = useAuth()
@@ -9,17 +10,25 @@ export default function AdminTariffs() {
   const [msg, setMsg] = useState('')
   const [tariffs, setTariffs] = useState([])
   const [loading, setLoading] = useState(true)
-  const [wardFilter, setWardFilter] = useState('')
+  const [councilFilter, setCouncilFilter] = useState('')
   const [locationFilter, setLocationFilter] = useState('')
   const [surfaceFilter, setSurfaceFilter] = useState('')
   const [editingId, setEditingId] = useState(null)
   const [editForm, setEditForm] = useState({})
+  const [councils, setCouncils] = useState([])
 
   const canManage = user?.role === 'SUPER_ADMIN' || user?.role === 'MANAGER'
 
   const load = async () => {
     setLoading(true)
-    try { const res = await client.get('/tariffs'); setTariffs(res.data || []) } catch {}
+    try { 
+      const [tariffsRes, councilsRes] = await Promise.all([
+        client.get('/tariffs'),
+        client.get('/councils')
+      ])
+      setTariffs(tariffsRes.data || [])
+      setCouncils(councilsRes.data || [])
+    } catch {}
     setLoading(false)
   }
   useEffect(()=>{ load() }, [])
@@ -87,14 +96,14 @@ export default function AdminTariffs() {
 
   const filteredTariffs = useMemo(() => {
     return tariffs.filter(t => (
-      (wardFilter ? String(t.ward_id) === String(wardFilter) : true) &&
+      (councilFilter ? String(t.council_id) === String(councilFilter) : true) &&
       (locationFilter ? t.location_type === locationFilter : true) &&
       (surfaceFilter ? t.surface_area_bucket === surfaceFilter : true)
     ))
-  }, [tariffs, wardFilter, locationFilter, surfaceFilter])
+  }, [tariffs, councilFilter, locationFilter, surfaceFilter])
 
   const downloadTemplate = () => {
-    const header = 'Ward No,Location,Surface Area,Tariff Amount\n'
+    const header = 'Council ID,Location,Surface Area,Tariff Amount\n'
     const samples = [
       '1,Peri-Urban Highways,<2m2,1000',
       '1,Peri-Urban Highways,2m2-5m2,2500',
@@ -116,7 +125,7 @@ export default function AdminTariffs() {
     <div>
       <h2 className="text-2xl font-semibold mb-2">Tariff Table</h2>
       {canManage && (
-        <p className="text-sm text-gray-600 mb-4">Columns must be: Ward No, Location, Surface Area, Tariff Amount. Location and Surface Area must match the predefined menus.</p>
+        <p className="text-sm text-gray-600 mb-4">Columns must be: Council ID, Location, Surface Area, Tariff Amount. Location and Surface Area must match the predefined menus.</p>
       )}
 
       {canManage && (
@@ -141,10 +150,10 @@ export default function AdminTariffs() {
 
       <div className="mb-4 grid grid-cols-1 md:grid-cols-4 gap-3">
         <div>
-          <label className="block text-sm text-gray-700 mb-1">Ward</label>
-          <select value={wardFilter} onChange={e=>setWardFilter(e.target.value)} className="w-full border rounded px-2 py-2">
+          <label className="block text-sm text-gray-700 mb-1">Council</label>
+          <select value={councilFilter} onChange={e=>setCouncilFilter(e.target.value)} className="w-full border rounded px-2 py-2">
             <option value="">All</option>
-            {WARDS.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
+            {councils.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
         <div>
@@ -163,7 +172,7 @@ export default function AdminTariffs() {
         </div>
         {canManage && (
           <div className="flex items-end">
-            <button onClick={()=>{setWardFilter('');setLocationFilter('');setSurfaceFilter('')}} className="w-full border rounded px-3 py-2 hover:bg-gray-50">Clear</button>
+            <button onClick={()=>{setCouncilFilter('');setLocationFilter('');setSurfaceFilter('')}} className="w-full border rounded px-3 py-2 hover:bg-gray-50">Clear</button>
           </div>
         )}
       </div>
@@ -175,7 +184,7 @@ export default function AdminTariffs() {
           <table className="min-w-full bg-white rounded shadow">
             <thead className="bg-gray-100">
               <tr>
-                <th className="text-left p-3">Ward No</th>
+                <th className="text-left p-3">Council</th>
                 <th className="text-left p-3">Location</th>
                 <th className="text-left p-3">Surface Area</th>
                 <th className="text-left p-3">Tariff Amount (Le)</th>
@@ -187,8 +196,12 @@ export default function AdminTariffs() {
                 <tr key={t.id} className="border-t">
                   <td className="p-3">
                     {editingId === t.id ? (
-                      <input type="number" value={editForm.ward_id} onChange={e=>setEditForm({...editForm, ward_id: Number(e.target.value)})} className="border rounded px-2 py-1 w-20" />
-                    ) : t.ward_id}
+                      <select value={editForm.council_id} onChange={e=>setEditForm({...editForm, council_id: Number(e.target.value)})} className="border rounded px-2 py-1">
+                        {councils.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>
+                    ) : (
+                      councils.find(c => c.id === t.council_id)?.name || t.council_id
+                    )}
                   </td>
                   <td className="p-3">
                     {editingId === t.id ? (
@@ -208,7 +221,7 @@ export default function AdminTariffs() {
                     {editingId === t.id ? (
                       <input type="number" value={editForm.tariff_amount} onChange={e=>setEditForm({...editForm, tariff_amount: Number(e.target.value)})} className="border rounded px-2 py-1 w-24" />
                     ) : (
-                      <span>{t.tariff_amount}</span>
+                      <span>{formatNumber(t.tariff_amount)}</span>
                     )}
                   </td>
                   {canManage && (
