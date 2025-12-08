@@ -97,7 +97,7 @@ export default function Dashboard() {
   return (
     <div>
       {/* Welcome Banner */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-6 mb-8 shadow-md">
+      <div className="bg-gradient-to-r from-blue-700 to-blue-800 rounded-xl p-6 mb-8 shadow-md">
         <h1 className="text-2xl font-bold text-white mb-1">Welcome back!</h1>
         <p className="text-blue-100 text-sm">{user ? `Here's what's happening with your billboard operations today.` : 'Welcome to Billboard BMS'}</p>
       </div>
@@ -168,7 +168,7 @@ export default function Dashboard() {
             <h2 className="text-xl font-bold mb-2 text-gray-900">Quick Actions</h2>
             <p className="text-gray-600 text-sm mb-6">Common tasks</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Link to="/admin/requests" className="group bg-blue-600 hover:bg-blue-700 rounded-lg p-6 shadow transition-all duration-200">
+              <Link to="/admin/requests" className="group bg-blue-700 hover:bg-blue-800 rounded-lg p-6 shadow transition-all duration-200">
                 <div className="text-white font-semibold mb-1">Review Pending Licenses</div>
                 <div className="text-blue-100 text-sm">Approve or reject license requests</div>
               </Link>
@@ -176,7 +176,7 @@ export default function Dashboard() {
                 <div className="text-white font-semibold mb-1">Process Invoices</div>
                 <div className="text-emerald-100 text-sm">Generate and send invoices</div>
               </Link>
-              <Link to="/admin/operators" className="group bg-blue-600 hover:bg-blue-700 rounded-lg p-6 shadow transition-all duration-200">
+              <Link to="/admin/operators" className="group bg-blue-700 hover:bg-blue-800 rounded-lg p-6 shadow transition-all duration-200">
                 <div className="text-white font-semibold mb-1">Manage Operators</div>
                 <div className="text-blue-100 text-sm">Review operator applications</div>
               </Link>

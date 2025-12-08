@@ -1,0 +1,87 @@
+Subject: Billboard License Automation - Webhook Integration Ready
+
+Hi REVMIS Team,
+
+Our Billboard Management System is now ready to automatically issue licenses when you receive payments!
+
+---
+
+🔗 WEBHOOK ENDPOINT:
+
+POST https://your-billboard-system.com/api/webhook/revmis/payment
+
+(Replace with actual production URL - currently testing on http://localhost:5000)
+
+---
+
+🔐 API KEY (CONFIDENTIAL):
+
+Your API Key: f22551190897ee63ecc9812858e0b7027262159c946ae0c5eba1bad64bf1822f
+
+⚠️ Keep this key secure and confidential!
+
+All requests must include this in the X-API-Key header:
+X-API-Key: f22551190897ee63ecc9812858e0b7027262159c946ae0c5eba1bad64bf1822f
+
+---
+
+📋 WHAT TO SEND (JSON):
+
+{
+  "invoice_no": "INV-2025-357790",
+  "payment_reference": "REVMIS-TXN-123456789",
+  "amount_paid": 2300,
+  "payment_date": "2025-12-05T16:30:00Z"
+}
+
+Required fields:
+- invoice_no (string) - Invoice number from our system
+- payment_reference (string) - Your REVMIS transaction ID
+- amount_paid (number) - Amount paid by customer
+
+---
+
+✅ WHAT YOU'LL GET BACK:
+
+{
+  "success": true,
+  "message": "Payment confirmed and license issued successfully",
+  "license_no": "LIC-2025-001234",
+  "invoice_no": "INV-2025-357790",
+  "payment_reference": "REVMIS-TXN-123456789"
+}
+
+The license_no is what you should provide to the customer!
+
+---
+
+📚 FULL DOCUMENTATION:
+
+Please see attached REVMIS_INTEGRATION_GUIDE.md for:
+- Complete API documentation
+- Code examples (JavaScript, Python, cURL)
+- Error handling
+- Testing guidelines
+
+---
+
+🔄 INTEGRATION FLOW:
+
+1. We send invoice to REVMIS
+2. Customer pays through REVMIS
+3. REVMIS calls our webhook with payment confirmation
+4. We automatically issue the license
+5. REVMIS receives license number to give to customer
+
+---
+
+🧪 TESTING:
+
+The endpoint is live and ready for testing. Please test with actual invoice numbers from our system.
+
+---
+
+Let me know if you have any questions or need help with the integration!
+
+Best regards,
+Billboard BMS Team

@@ -89,7 +89,7 @@ export default function AdminRequests() {
             {/* Pending Card - Amber */}
             <div className="bg-white rounded-lg p-6 shadow border border-gray-200">
               <div className="flex items-center justify-between mb-4">
-                <div className="text-gray-600 text-sm font-medium">Pending Items</div>
+                <div className="text-gray-600 text-sm font-medium">Pending Requests</div>
                 <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
                   <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -102,7 +102,7 @@ export default function AdminRequests() {
             {/* Approved Card - Green */}
             <div className="bg-white rounded-lg p-6 shadow border border-gray-200">
               <div className="flex items-center justify-between mb-4">
-                <div className="text-gray-600 text-sm font-medium">Approved Items</div>
+                <div className="text-gray-600 text-sm font-medium">Approved Requests</div>
                 <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
                   <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -115,7 +115,7 @@ export default function AdminRequests() {
             {/* Rejected Card - Gray */}
             <div className="bg-white rounded-lg p-6 shadow border border-gray-200">
               <div className="flex items-center justify-between mb-4">
-                <div className="text-gray-600 text-sm font-medium">Rejected Items</div>
+                <div className="text-gray-600 text-sm font-medium">Rejected Requests</div>
                 <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
                   <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />

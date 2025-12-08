@@ -4,7 +4,7 @@
 const CODE_ALPHABET = '23456789CFGHJMPQRVWX';
 const CODE_LENGTH = 10;
 const PAIR_CODE_LENGTH = 10;
-const GRID_SIZE_DEGREES = 20;
+const GRID_SIZE_DEGREES = 20; 
 
 /**
  * Generates a Plus Code (Open Location Code) from latitude and longitude

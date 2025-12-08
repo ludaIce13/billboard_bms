@@ -173,8 +173,11 @@ export interface InvoiceAttributes {
   total: number;
   revmis_status: string | null;
   revmis_reference: string | null;
+  payment_status: string | null;
+  payment_reference: string | null;
+  payment_date: Date | null;
 }
-export interface InvoiceCreationAttributes extends Optional<InvoiceAttributes, 'id' | 'request_id' | 'revmis_status' | 'revmis_reference'> {}
+export interface InvoiceCreationAttributes extends Optional<InvoiceAttributes, 'id' | 'request_id' | 'revmis_status' | 'revmis_reference' | 'payment_status' | 'payment_reference' | 'payment_date'> {}
 export class Invoice extends Model<InvoiceAttributes, InvoiceCreationAttributes> implements InvoiceAttributes {
   public id!: number;
   public invoice_no!: string;
@@ -185,6 +188,9 @@ export class Invoice extends Model<InvoiceAttributes, InvoiceCreationAttributes>
   public total!: number;
   public revmis_status!: string | null;
   public revmis_reference!: string | null;
+  public payment_status!: string | null;
+  public payment_reference!: string | null;
+  public payment_date!: Date | null;
 }
 Invoice.init(
   {
@@ -197,6 +203,9 @@ Invoice.init(
     total: { type: DataTypes.FLOAT, allowNull: false },
     revmis_status: { type: DataTypes.STRING, allowNull: true },
     revmis_reference: { type: DataTypes.STRING, allowNull: true },
+    payment_status: { type: DataTypes.STRING, allowNull: true },
+    payment_reference: { type: DataTypes.STRING, allowNull: true },
+    payment_date: { type: DataTypes.DATE, allowNull: true },
   },
   { sequelize, modelName: 'invoice' }
 );
