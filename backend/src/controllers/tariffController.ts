@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Tariff } from '../models';
-import { parse } from 'csv-parse/lib/sync';
+import { parse } from 'csv-parse/sync';
 import { isValidLocationType, isValidSurfaceAreaBucket } from '../utils/enums';
 
 type MulterFileWithBuffer = {
