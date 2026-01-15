@@ -19,7 +19,7 @@ import AdminUsers from './pages/admin/AdminUsers'
 ReactDOM.createRoot(document.getElementById('root')).render(
   <Router>
     <Routes>
-      <Route path="/" element={<Layout><Dashboard /></Layout>} />
+      <Route path="/" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
       <Route path="/login" element={<Login />} />
       <Route path="/operator/register" element={<OperatorRegister />} />
       <Route path="/operator/request" element={<ProtectedRoute><OperatorRequest /></ProtectedRoute>} />
