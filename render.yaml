@@ -4,10 +4,12 @@ services:
     env: node
     plan: free
     rootDir: backend
-    buildCommand: npm install && npm run build
+    buildCommand: npm ci && npm run build
     startCommand: npm run start
     autoDeploy: true
     envVars:
+      - key: NODE_VERSION
+        value: 20.11.1
       - key: NODE_ENV
         value: production
       - key: USE_SQLITE
