@@ -57,9 +57,7 @@ async function seed() {
     
   } catch (error) {
     console.error('❌ Seed failed:', error);
-  } finally {
-    process.exit(0);
   }
 }
 
-seed();
+export { seed };
