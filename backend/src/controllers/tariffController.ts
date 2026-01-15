@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Tariff } from '../models';
-import { parse } from 'csv-parse/sync';
+import { parse } from 'csv-parse/lib/sync';
+import type { Express as ExpressNamespace } from 'express';
 import { isValidLocationType, isValidSurfaceAreaBucket } from '../utils/enums';
 
 export async function uploadTariffs(req: Request, res: Response) {
@@ -29,7 +30,7 @@ export async function listTariffs(req: Request, res: Response) {
 
 export async function uploadTariffsCsv(req: Request, res: Response) {
   try {
-    const file = (req as any).file as Express.Multer.File | undefined;
+    const file = (req as any).file as ExpressNamespace.Multer.File | undefined;
     if (!file || !file.buffer) return res.status(400).json({ message: 'CSV file required (field name: file)' });
     const text = file.buffer.toString('utf-8');
     const records = parse(text, { columns: true, skip_empty_lines: true });

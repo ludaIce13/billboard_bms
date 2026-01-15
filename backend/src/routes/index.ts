@@ -10,6 +10,10 @@ import councils from './councils';
 import webhook from './webhook';
 
 const router = Router();
+// Health endpoint for GET /api
+router.get('/', (req, res) => {
+  res.json({ status: 'ok' });
+});
 router.use('/auth', auth);
 router.use('/users', users);
 router.use('/operators', operators);
