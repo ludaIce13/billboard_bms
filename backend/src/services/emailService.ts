@@ -1,36 +1,62 @@
 import nodemailer from 'nodemailer';
 
-// Simple reusable email sender. Configure via environment variables.
+// Email service configuration
+// Option 1: SendGrid API (Recommended for Render)
+// Required env vars:
+// - SENDGRID_API_KEY
+// - SENDGRID_FROM
+
+// Option 2: SMTP (Alternative)
 // Required env vars:
 // - SMTP_HOST
 // - SMTP_PORT
 // - SMTP_USER
 // - SMTP_PASS
-// - SMTP_FROM (display From address)
+// - SMTP_FROM
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT) || 587,
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+let transporter: nodemailer.Transporter;
+
+// Initialize transporter based on available configuration
+if (process.env.SENDGRID_API_KEY) {
+  // SendGrid configuration (recommended)
+  transporter = nodemailer.createTransport({
+    host: 'smtp.sendgrid.net',
+    port: 587,
+    secure: false,
+    auth: {
+      user: 'apikey',
+      pass: process.env.SENDGRID_API_KEY,
+    },
+  });
+  console.log('📧 Using SendGrid for email delivery');
+} else if (process.env.SMTP_HOST) {
+  // SMTP configuration
+  transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT) || 587,
+    secure: false,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+  console.log('📧 Using SMTP for email delivery');
+} else {
+  console.warn('⚠️ No email configuration found');
+}
 
 export async function sendEmail(to: string, subject: string, html: string) {
   console.log('📧 Email attempt:', { to, subject });
   
-  if (!process.env.SMTP_HOST) {
-    // Email not configured; fail silently to avoid breaking core flows in dev.
-    console.warn('⚠️ SMTP not configured; skipping email to', to);
-    console.warn('Required env vars: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM');
+  if (!transporter) {
+    console.warn('⚠️ Email not configured; skipping email to', to);
+    console.warn('Configure either SENDGRID_API_KEY or SMTP_* environment variables');
     return;
   }
 
   try {
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      from: process.env.SENDGRID_FROM || process.env.SMTP_FROM || process.env.SMTP_USER,
       to,
       subject,
       html,
@@ -38,5 +64,6 @@ export async function sendEmail(to: string, subject: string, html: string) {
     console.log('✅ Email sent successfully to:', to);
   } catch (error) {
     console.error('❌ Failed to send email:', error);
+    throw error;
   }
 }
