@@ -30,7 +30,7 @@ if (process.env.SENDGRID_API_KEY) {
   });
   console.log('📧 Using SendGrid for email delivery');
 } else if (process.env.SMTP_HOST) {
-  // SMTP configuration
+  // SMTP configuration with timeout handling
   transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT) || 587,
@@ -38,6 +38,12 @@ if (process.env.SENDGRID_API_KEY) {
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
+    },
+    connectionTimeout: 10000, // 10 seconds
+    greetingTimeout: 10000,   // 10 seconds
+    socketTimeout: 10000,      // 10 seconds
+    tls: {
+      rejectUnauthorized: false, // Allow self-signed certificates
     },
   });
   console.log('📧 Using SMTP for email delivery');
