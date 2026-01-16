@@ -8,13 +8,12 @@ async function seed() {
     
     let created = 0;
     
-    // Create default councils if not exist
+    // Create default councils if not exist (matching REVMIS API)
     const defaultCouncils = [
-      { id: 1, name: 'Freetown City Council' },
-      { id: 2, name: 'Makeni City Council' },
-      { id: 3, name: 'Bo City Council' },
-      { id: 4, name: 'Kenema City Council' },
-      { id: 5, name: 'Koidu City Council' }
+      { id: 1, name: 'Bo city council' },
+      { id: 2, name: 'Moyamba District Council' },
+      { id: 3, name: 'Kambia District Council' },
+      { id: 4, name: 'Western Area Rural District Council' }
     ];
     
     for (const councilData of defaultCouncils) {
@@ -61,11 +60,10 @@ async function seed() {
     
     console.log('==========================================');
     console.log('DEFAULT COUNCILS:');
-    console.log('1 - Freetown City Council');
-    console.log('2 - Makeni City Council');
-    console.log('3 - Bo City Council');
-    console.log('4 - Kenema City Council');
-    console.log('5 - Koidu City Council');
+    console.log('1 - Bo city council');
+    console.log('2 - Moyamba District Council');
+    console.log('3 - Kambia District Council');
+    console.log('4 - Western Area Rural District Council');
     console.log('');
     console.log('SUPER ADMIN:');
     console.log('Email: admin@bms.com');
