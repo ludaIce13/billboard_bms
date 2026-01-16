@@ -22,13 +22,19 @@ export default function AdminTariffs() {
   const load = async () => {
     setLoading(true)
     try { 
+      console.log('Loading tariffs and councils...')
       const [tariffsRes, councilsRes] = await Promise.all([
         client.get('/tariffs'),
         client.get('/councils')
       ])
+      console.log('Tariffs response:', tariffsRes.data)
+      console.log('Councils response:', councilsRes.data)
       setTariffs(tariffsRes.data || [])
       setCouncils(councilsRes.data || [])
-    } catch {}
+    } catch (e) {
+      console.error('Error loading data:', e)
+      setMsg('Failed to load data')
+    }
     setLoading(false)
   }
   useEffect(()=>{ load() }, [])

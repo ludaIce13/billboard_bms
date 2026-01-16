@@ -24,9 +24,8 @@ export async function uploadTariffs(req: Request, res: Response) {
 
 export async function listTariffs(req: Request, res: Response) {
   try {
-    console.log('Fetching tariffs from database...');
     const list = await Tariff.findAll();
-    console.log(`Found ${list.length} tariffs:`, list);
+    console.log(`Found ${list.length} tariffs`);
     res.json(list);
   } catch (e) {
     console.error('Error listing tariffs:', e);
