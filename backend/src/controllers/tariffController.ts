@@ -24,19 +24,28 @@ export async function uploadTariffs(req: Request, res: Response) {
 
 export async function listTariffs(req: Request, res: Response) {
   try {
+    console.log('Fetching tariffs from database...');
     const list = await Tariff.findAll();
+    console.log(`Found ${list.length} tariffs:`, list);
     res.json(list);
   } catch (e) {
-    res.status(500).json({ message: 'Failed to list tariffs' });
+    console.error('Error listing tariffs:', e);
+    res.status(500).json({ message: 'Failed to list tariffs', error: e instanceof Error ? e.message : 'Unknown error' });
   }
 }
 
 export async function uploadTariffsCsv(req: Request, res: Response) {
   try {
+    console.log('CSV upload request received');
     const file = (req as any).file as MulterFileWithBuffer | undefined;
-    if (!file || !file.buffer) return res.status(400).json({ message: 'CSV file required (field name: file)' });
+    if (!file || !file.buffer) {
+      console.log('No file provided');
+      return res.status(400).json({ message: 'CSV file required (field name: file)' });
+    }
+    console.log('Processing CSV file...');
     const text = file.buffer.toString('utf-8');
     const records = parse(text, { columns: true, skip_empty_lines: true });
+    console.log(`Parsed ${records.length} records from CSV`);
 
     let created = 0;
     const errors: string[] = [];
@@ -74,9 +83,12 @@ export async function uploadTariffsCsv(req: Request, res: Response) {
         continue;
       }
       
+      console.log(`Creating tariff: council_id=${council_id}, location_type=${location_type}, surface_area_bucket=${surface_area_bucket}, tariff_amount=${tariff_amount}`);
       await Tariff.create({ council_id, location_type, surface_area_bucket, tariff_amount });
       created++;
     }
+    
+    console.log(`Successfully created ${created} tariffs`);
     
     if (errors.length > 0 && created === 0) {
       // All rows failed
@@ -94,6 +106,7 @@ export async function uploadTariffsCsv(req: Request, res: Response) {
       totalErrors: errors.length
     });
   } catch (e) {
+    console.error('CSV upload error:', e);
     res.status(500).json({ message: 'Failed to upload CSV tariffs', error: e instanceof Error ? e.message : 'Unknown error' });
   }
 }
