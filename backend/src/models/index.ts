@@ -1,5 +1,6 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import { sequelize } from '../../config/database';
+import { Council } from './council';
 
 export type Role = 'SUPER_ADMIN' | 'MANAGER' | 'BILLING' | 'OPERATOR';
 
@@ -256,6 +257,7 @@ Invoice.belongsTo(LicenseRequest, { foreignKey: 'request_id' });
 Invoice.hasOne(License, { foreignKey: 'invoice_id' });
 License.belongsTo(Invoice, { foreignKey: 'invoice_id' });
 
+export { Council };
 export default {
   sequelize,
   User,
@@ -265,4 +267,5 @@ export default {
   LicenseRequestItem,
   Invoice,
   License,
+  Council,
 };

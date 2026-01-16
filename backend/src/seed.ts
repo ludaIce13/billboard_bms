@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { User } from './models';
+import { User, Council } from './models';
 import { initDatabase } from '../config/database';
 
 async function seed() {
@@ -7,6 +7,23 @@ async function seed() {
     await initDatabase();
     
     let created = 0;
+    
+    // Create default councils if not exist
+    const defaultCouncils = [
+      { id: 1, name: 'Freetown City Council' },
+      { id: 2, name: 'Makeni City Council' },
+      { id: 3, name: 'Bo City Council' },
+      { id: 4, name: 'Kenema City Council' },
+      { id: 5, name: 'Koidu City Council' }
+    ];
+    
+    for (const councilData of defaultCouncils) {
+      const existingCouncil = await Council.findByPk(councilData.id);
+      if (!existingCouncil) {
+        await Council.create(councilData);
+        created++;
+      }
+    }
     
     // Create default Super Admin if not exists
     const existingAdmin = await User.findOne({ where: { email: 'admin@bms.com' } });
@@ -37,12 +54,19 @@ async function seed() {
     }
     
     if (created === 0) {
-      console.log('✅ All default users already exist');
+      console.log('✅ All default data already exists');
     } else {
-      console.log(`✅ Created ${created} default user(s) successfully!`);
+      console.log(`✅ Created ${created} default item(s) successfully!`);
     }
     
     console.log('==========================================');
+    console.log('DEFAULT COUNCILS:');
+    console.log('1 - Freetown City Council');
+    console.log('2 - Makeni City Council');
+    console.log('3 - Bo City Council');
+    console.log('4 - Kenema City Council');
+    console.log('5 - Koidu City Council');
+    console.log('');
     console.log('SUPER ADMIN:');
     console.log('Email: admin@bms.com');
     console.log('Password: admin123');
